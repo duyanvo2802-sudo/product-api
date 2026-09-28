@@ -1,0 +1,36 @@
+name: Test Product CI Production with MongoDB
+
+on:
+  push:
+    branches: [ "main", "master" ]
+
+jobs:
+  ci-prod:
+    runs-on: ubuntu-latest
+    services:
+      mongodb:
+        image: mongo:latest
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.adminCommand(\"ping\")'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+      - name: Install dependencies
+        run: npm install
+      - name: Run Integration Test with MongoDB
+        env:
+          PORT: 3000
+          MONGODB_URI: mongodb://localhost:27017/productdb
+        run: |
+          npm run test --if-present
+          
